@@ -1,6 +1,6 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
 import { ScrollView } from 'react-native-gesture-handler';
 
@@ -106,6 +106,7 @@ const CarTrackingMapScreen = () => {
         pitchEnabled={false}
         rotateEnabled={false}
         // No region prop, no onRegionChangeComplete for iOS
+        provider={PROVIDER_GOOGLE} // Use Google Maps
       >
         {/* Bus Stop Markers */}
         {busStops.map((stop, idx) => (
