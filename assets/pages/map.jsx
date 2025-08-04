@@ -99,8 +99,8 @@ const CarTrackingMapScreen = () => {
         initialRegion={initialRegion}
         minDelta={0.005}
         maxDelta={0.03}
-        minZoomLevel={16}
-        maxZoomLevel={19}
+        minZoomLevel={10}
+        maxZoomLevel={17}
         scrollEnabled={true}
         zoomEnabled={true}
         pitchEnabled={false}
