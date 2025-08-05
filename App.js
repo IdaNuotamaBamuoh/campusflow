@@ -11,6 +11,8 @@ import DriverSignIn from './app/pages/driverSignIn'; // Import driver sign-in sc
 import DriverMapScreen from './app/pages/driverMapScreen'; // Import driver map screen
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
+import SignUpScreen from './app/pages/signup';
+import Signin from './app/pages/signin';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +34,8 @@ export default function App() {
             <Stack.Screen name="MapScreen" component={MapScreen} />
             <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
+            <Stack.Screen name="Signup" component={SignUpScreen} />
+            <Stack.Screen name="Signin" component={Signin} />
           </Stack.Navigator>
         </NavigationContainer>
       <Toast />
