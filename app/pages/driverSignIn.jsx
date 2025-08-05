@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
-import { ScrollView } from 'react-native-web';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
+import { Colors } from '../../components/colors';
 
 
 const DriverSignIn = ({ navigation }) => {
@@ -32,69 +32,87 @@ const DriverSignIn = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up to CAMPUSFLOW</Text>
+    <ScrollView contentContainerStyle={styles.container}>
 
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Employee ID"
-        value={eid}
-        onChangeText={setEid}
-        placeholderTextColor="#ccc"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholderTextColor="#ccc"
-      />
-       <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmpassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        placeholderTextColor="#ccc"
-      />
+      <View >
+        <View style={styles.titleContainer}>
+          <Text style={[styles.title, {fontWeight: 500}]}>Sign In to</Text>
+          <Text style={styles.title}>CAMPUSFLOW</Text>
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Employee ID</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your employee ID"
+          value={eid}
+          onChangeText={setEid}
+          placeholderTextColor="#ccc"
+        />
 
-      <View>
-        <Text style={{color: '#29722F', fontSize: 16, textAlign: 'center', marginTop: 20}}>
-          Student? <Text style={{fontWeight: 'bold'}}>Log In Here</Text>
-        </Text>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          placeholderTextColor="#ccc"
+        />
+
+        <Text style={styles.label}>Confirm Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Re-enter password"
+          value={confirmpassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          placeholderTextColor="#ccc"
+        />
+
+        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+          <Text style={styles.buttonText}>Sign In</Text>
+        </TouchableOpacity>
+
+        <View>
+          <Text style={{color: Colors.colorTheme, fontSize: 16, textAlign: 'center', marginTop: 20}}>
+            Student? <Text style={{fontWeight: 'bold'}}>Log In Here</Text>
+          </Text>
+        </View>
+
+        {Platform.OS === 'web' && (
+          <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
+            MapScreen is not available on web. Please use a mobile device or emulator.
+          </Text>
+        )}
       </View>
-
-      {Platform.OS === 'web' && (
-        <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
-          MapScreen is not available on web. Please use a mobile device or emulator.
-        </Text>
-      )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.background,
     flex: 1,
     justifyContent: 'center',
     padding: 20,
   },
+  titleContainer: {
+    marginVertical: 30,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    flexDirection: 'row'
+  },
   title: {
     fontSize: 28,
-    color: '#29722F',
+    color: Colors.colorTheme,
     fontWeight: 'bold',
     marginBottom: 30,
     textAlign: 'center',
   },
   input: {
-    borderColor: '#29722F',
+    borderColor: Colors.colorTheme,
     backgroundColor: '#f0f0f0',
     borderWidth: 2,
     borderRadius: 8,
@@ -104,17 +122,22 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   button: {
-    backgroundColor: '#29722F',
+    backgroundColor: Colors.colorTheme,
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#ffffff',
+    color: Colors.background,
     fontSize: 18,
     fontWeight: 'bold',
   },
+  label: {
+    color: Colors.secondaryBackground,
+    fontWeight: 600,
+    marginBottom: 10
+  }
 });
 
 export default DriverSignIn;
