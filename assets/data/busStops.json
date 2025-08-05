@@ -1,0 +1,13 @@
+[
+  { "name": "Chemistry Bus Stop", "latitude": 6.674460836771705, "longitude": -1.5675313362638799 },
+  { "name": "Pharmacy Bus Stop", "latitude": 6.674798061367296, "longitude": -1.5664588657975724 },
+  { "name": "Gaza Bus Stop", "latitude": 6.6865229413454275, "longitude": -1.5569190206007884 },
+  { "name": "Medical Village Bus Stop", "latitude": 6.680091975715447, "longitude": -1.5491368884918577 },
+  { "name": "Commercial Area Bus Stop", "latitude": 6.6827890091797055, "longitude": -1.577008216340791 },
+  { "name": "KSB Bus Stop", "latitude": 6.669327266771381, "longitude": -1.5671773386029446 },
+  { "name": "Hall 7 A Bus Stop", "latitude": 6.6792880505895855, "longitude": -1.572800620593267 },
+  { "name": "Hall 7 B Bus Stop", "latitude": 6.679633325049614, "longitude": -1.572970774312712 },
+  { "name": "Prempeh Lib Bus Stop", "latitude": 6.6750018341728, "longitude": -1.5723240108641996 },
+  { "name": "Brunei Bus Stop", "latitude": 6.670467948134247, "longitude": -1.5741485986620063 },
+  { "name": "Casely Hayford (SRC) Bus Stop", "latitude": 6.6752288540317455, "longitude": -1.567886171892303 }
+]
