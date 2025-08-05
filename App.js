@@ -7,7 +7,10 @@ import FlashScreen from './assets/pages/splash';
 import MainApp from './assets/pages/signup'; // Your actual app screen
 import { useFonts } from 'expo-font';
 import MapScreen from './assets/pages/map'; // Import your map screen
+import DriverSignIn from './assets/pages/driverSignIn'; // Import driver sign-in screen
+import DriverMapScreen from './assets/pages/driverMapScreen'; // Import driver map screen
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,13 +25,16 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="FlashScreen" screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="FlashScreen" component={FlashScreen} />
-          <Stack.Screen name="MainApp" component={MainApp} />
-          <Stack.Screen name="MapScreen" component={MapScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="FlashScreen" screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="FlashScreen" component={FlashScreen} />
+            <Stack.Screen name="MainApp" component={MainApp} />
+            <Stack.Screen name="MapScreen" component={MapScreen} />
+            <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
+            <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      <Toast />
     </GestureHandlerRootView>
   );
 }
