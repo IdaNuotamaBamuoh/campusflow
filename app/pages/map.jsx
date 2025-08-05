@@ -2,12 +2,12 @@ import React, { useCallback, useRef, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
+import polyline from '@mapbox/polyline';
 import { GOOGLE_MAPS_API_KEY } from '../../env';
 import Toast from 'react-native-toast-message';
-import polyline from '@mapbox/polyline';
-import routesData from '../data/routes.json';
-import busStopsData from '../data/busStops.json'; // ✅ Import bus stops JSON
-import { supabase } from '../backend/supabase';
+import routesData from '../../assets/data/routes.json'; // ✅ Import routes JSON
+import busStopsData from '../../assets/data/busStops.json'; // ✅ Import bus stops JSON
+import { supabase } from '../../assets/backend/supabase';
 
 const CarTrackingMapScreen = () => {
   const sheetRef = useRef(null);

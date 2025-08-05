@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { supabase } from '../backend/supabase';
+import { supabase } from '../../assets/backend/supabase';
 
 const DriverMapScreen = () => {
   const [location, setLocation] = useState(null);

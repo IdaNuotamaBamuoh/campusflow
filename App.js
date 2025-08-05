@@ -3,14 +3,16 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import FlashScreen from './assets/pages/splash';
-import MainApp from './assets/pages/signup'; // Your actual app screen
+import FlashScreen from './app/pages/splash';
+import MainApp from './app/pages/signup'; // Your actual app screen
 import { useFonts } from 'expo-font';
-import MapScreen from './assets/pages/map'; // Import your map screen
-import DriverSignIn from './assets/pages/driverSignIn'; // Import driver sign-in screen
-import DriverMapScreen from './assets/pages/driverMapScreen'; // Import driver map screen
+import MapScreen from './app/pages/map'; // Import your map screen
+import DriverSignIn from './app/pages/driverSignIn'; // Import driver sign-in screen
+import DriverMapScreen from './app/pages/driverMapScreen'; // Import driver map screen
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
+import SignUpScreen from './app/pages/signup';
+import Signin from './app/pages/signin';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +34,8 @@ export default function App() {
             <Stack.Screen name="MapScreen" component={MapScreen} />
             <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
+            <Stack.Screen name="Signup" component={SignUpScreen} />
+            <Stack.Screen name="Signin" component={Signin} />
           </Stack.Navigator>
         </NavigationContainer>
       <Toast />

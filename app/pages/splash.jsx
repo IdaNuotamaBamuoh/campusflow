@@ -29,7 +29,7 @@ const FlashScreen = ({ navigation }) => {
     <View style={styles.container}>
       <View style={{width: '70%', alignItems: 'center', marginBottom: 20}}>
         <Animated.Image
-          source={require('../images/campusFlow2a.png')}
+          source={require('../.././assets/images/campusFlow2a.png')}
           style={[styles.logo, { opacity: fadeAnim }]}
         />
       </View>
