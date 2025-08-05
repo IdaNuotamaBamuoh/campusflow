@@ -3,10 +3,21 @@ import { View, Text, StyleSheet, Platform } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
 import { ScrollView } from 'react-native-gesture-handler';
+import polyline from '@mapbox/polyline';
+import { GOOGLE_MAPS_API_KEY } from '../../env';
+import Toast from 'react-native-toast-message';
 
+//358547
 
 const CarTrackingMapScreen = () => {
   const sheetRef = useRef(null);
+  const mapRef = useRef(null);
+  const snapTimeoutRef = useRef(null);
+
+
+  const buffer = 1.015;
+  // Road-following routes state for all segments
+  const [roadRoutes, setRoadRoutes] = useState({});
 
 
   // Map initial region for zooming in on KNUST
@@ -16,6 +27,92 @@ const CarTrackingMapScreen = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   };
+ //6.6775, -1.5400
+  const knustBounds = {
+    north:  { latitude: 6.6891, longitude: -1.5640 },
+    south:  { latitude: 6.6600, longitude: -1.5650 },
+    east:   { latitude: 6.6775, longitude: -1.5400 },
+    west:   { latitude: 6.6775, longitude: -1.5900 },
+    northeast: { latitude: 6.6950, longitude: -1.5400 },
+    northwest: { latitude: 6.6895, longitude: -1.5827 },
+    southeast: { latitude: 6.6613, longitude: -1.5531 },
+    southwest: { latitude: 6.6602, longitude: -1.5843 },
+
+};
+  const isInsideKnust= (region) => {
+    const { latitude, longitude } = region;
+
+    const latMin = knustBounds.south.latitude;
+    const latMax = knustBounds.north.latitude;
+    const lonMin = knustBounds.west.longitude;
+    const lonMax = knustBounds.east.longitude;
+
+    return latitude >= latMin && latitude <= latMax &&
+          longitude >= lonMin && longitude <= lonMax;
+
+  };
+
+  const handleRegionChange = useCallback((region) => {
+    if (!isInsideKnust(region)) {
+       if (snapTimeoutRef.current) return;
+
+    Toast.show({
+      type: 'info',
+      text1: 'Out of bounds',
+      text2: 'Re-centering to KNUST campus in 5 seconds...',
+      visibilityTime: 4000,
+    });
+
+    snapTimeoutRef.current = setTimeout(() => {
+      mapRef.current?.animateToRegion(initialRegion, 1000);
+      snapTimeoutRef.current = null;
+    }, 5000);
+  } else {
+    if (snapTimeoutRef.current) {
+      clearTimeout(snapTimeoutRef.current);
+      snapTimeoutRef.current = null;
+    }
+    }
+  }, []);
+
+
+  useEffect(() => {
+    sheetRef.current?.open(); // 👈 this will show the modal when the screen loads
+  }, []);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.warn('Google Maps API key not found');
+      return;
+    }
+    const routes = {
+      phaToMedi,
+      ksbToCommercial,
+      commercialToKsb,
+      bruneiToKsb,
+      ksbToBrunei,
+    };
+    Object.entries(routes).forEach(async ([key, coords]) => {
+      if (!coords || coords.length < 2) return;
+      const origin = `${coords[0].latitude},${coords[0].longitude}`;
+      const destination = `${coords[coords.length-1].latitude},${coords[coords.length-1].longitude}`;
+      const waypoints = coords.slice(1, -1)
+        .map(coord => `${coord.latitude},${coord.longitude}`)
+        .join('|');
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ''}&key=${GOOGLE_MAPS_API_KEY}&mode=driving`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.routes && data.routes.length) {
+          const points = polyline.decode(data.routes[0].overview_polyline.points);
+          const routeCoords = points.map(([latitude, longitude]) => ({ latitude, longitude }));
+          setRoadRoutes(prev => ({ ...prev, [key]: routeCoords }));
+        }
+      } catch (e) {
+        console.error(`Failed to fetch Google Directions route for ${key}`, e);
+      }
+    });
+  }, []);
 
   const destination = 'KNUST Campus';
   const eta = '8 mins';
@@ -95,18 +192,19 @@ const CarTrackingMapScreen = () => {
     <View style={styles.container}>
       {/* Map Section */}
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={initialRegion}
+        onRegionChangeComplete={handleRegionChange}
         minDelta={0.005}
         maxDelta={0.03}
-        minZoomLevel={10}
-        maxZoomLevel={17}
+        minZoomLevel={14.4}
+        maxZoomLevel={19}
         scrollEnabled={true}
         zoomEnabled={true}
         pitchEnabled={false}
         rotateEnabled={false}
-        // No region prop, no onRegionChangeComplete for iOS
-        provider={PROVIDER_GOOGLE} // Use Google Maps
+        provider={PROVIDER_GOOGLE}
       >
         {/* Bus Stop Markers */}
         {busStops.map((stop, idx) => (
@@ -117,12 +215,28 @@ const CarTrackingMapScreen = () => {
             pinColor="#29722F"
           />
         ))}
-        {/* Polylines for routes (straight lines) */}
-        <Polyline coordinates={phaToMedi} strokeColor="#FF5733" strokeWidth={4} />
-        <Polyline coordinates={ksbToCommercial} strokeColor="#29722F" strokeWidth={4} />
-        <Polyline coordinates={commercialToKsb} strokeColor="#29722F" strokeWidth={4} />
-        <Polyline coordinates={bruneiToKsb} strokeColor="#007AFF" strokeWidth={4} />
-        <Polyline coordinates={ksbToBrunei} strokeColor="#007AFF" strokeWidth={4} />
+        {/* Road-following polylines for all routes */}
+        {roadRoutes.phaToMedi && roadRoutes.phaToMedi.length > 0 && (
+          <Polyline coordinates={roadRoutes.phaToMedi} strokeColor="#FF5733" strokeWidth={5} />
+        )}
+        {roadRoutes.ksbToCommercial && roadRoutes.ksbToCommercial.length > 0 && (
+          <Polyline coordinates={roadRoutes.ksbToCommercial} strokeColor="#29722F" strokeWidth={5} />
+        )}
+        {roadRoutes.commercialToKsb && roadRoutes.commercialToKsb.length > 0 && (
+          <Polyline coordinates={roadRoutes.commercialToKsb} strokeColor="#29722F" strokeWidth={5} />
+        )}
+        {roadRoutes.bruneiToKsb && roadRoutes.bruneiToKsb.length > 0 && (
+          <Polyline coordinates={roadRoutes.bruneiToKsb} strokeColor="#007AFF" strokeWidth={5} />
+        )}
+        {roadRoutes.ksbToBrunei && roadRoutes.ksbToBrunei.length > 0 && (
+          <Polyline coordinates={roadRoutes.ksbToBrunei} strokeColor="#007AFF" strokeWidth={5} />
+        )}
+        {/* Optionally, keep the original straight lines for reference: */}
+        {/* <Polyline coordinates={phaToMedi} strokeColor="#FF5733" strokeWidth={2} />
+        <Polyline coordinates={ksbToCommercial} strokeColor="#29722F" strokeWidth={2} />
+        <Polyline coordinates={commercialToKsb} strokeColor="#29722F" strokeWidth={2} />
+        <Polyline coordinates={bruneiToKsb} strokeColor="#007AFF" strokeWidth={2} />
+        <Polyline coordinates={ksbToBrunei} strokeColor="#007AFF" strokeWidth={2} /> */}
       </MapView>
 
       {/* Modalize Bottom Sheet Panel */}

@@ -4,16 +4,15 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } 
 import { ScrollView } from 'react-native-web';
 
 
-const SignUpScreen = ({ navigation }) => {
+const DriverSignIn = ({ navigation }) => {
   const [firstname, setFirstName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [studentemail, setStudentEmail] = useState('');
+  const [eid, setEid] = useState('');
   const [password, setPassword] = useState('');
   const [confirmpassword, setConfirmPassword] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignIn = () => {
     // Basic input check
-    if (!firstname || !surname || !studentemail || !password || !confirmpassword) {
+    if ( !eid || !password || !confirmpassword) {
       Alert.alert('Error', 'Please fill out all fields');
       return;
     }
@@ -26,7 +25,9 @@ const SignUpScreen = ({ navigation }) => {
     Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!`);
     // Only navigate to MapScreen on native platforms
     if (navigation && navigation.replace && Platform.OS !== 'web') {
-      navigation.replace('MapScreen'); // Navigate to the main app screen after sign up
+      navigation.replace('DriverMapScreen', {
+      driverName: firstname || 'Driver',
+});
     }
   };
 
@@ -34,27 +35,12 @@ const SignUpScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Sign Up to CAMPUSFLOW</Text>
 
+      
       <TextInput
         style={styles.input}
-        placeholder="First Name"
-        value={firstname}
-        onChangeText={setFirstName}
-        placeholderTextColor="#ccc"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Surname"
-        value={surname}
-        onChangeText={setSurname}
-        placeholderTextColor="#ccc"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Student Email"
-        value={studentemail}
-        onChangeText={setStudentEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
+        placeholder="Employee ID"
+        value={eid}
+        onChangeText={setEid}
         placeholderTextColor="#ccc"
       />
       <TextInput
@@ -74,24 +60,15 @@ const SignUpScreen = ({ navigation }) => {
         placeholderTextColor="#ccc"
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Create Account</Text>
+      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+        <Text style={styles.buttonText}>Sign In</Text>
       </TouchableOpacity>
 
       <View>
         <Text style={{color: '#29722F', fontSize: 16, textAlign: 'center', marginTop: 20}}>
-          Already have an account? <Text style={{fontWeight: 'bold'}}
-          onPress={() => navigation.navigate('')}>
-            Log In</Text>
+          Student? <Text style={{fontWeight: 'bold'}}>Log In Here</Text>
         </Text>
       </View>
-
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#444', marginTop: 20 }]}
-        onPress={() => navigation.navigate('DriverSignIn')}
-      >
-        <Text style={styles.buttonText}>Sign In as Driver</Text>
-      </TouchableOpacity>
 
       {Platform.OS === 'web' && (
         <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
@@ -140,4 +117,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUpScreen;
+export default DriverSignIn;
