@@ -130,8 +130,8 @@ const SignUpScreen = ({ navigation }) => {
             placeholderTextColor="#ccc"
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-            <Text style={styles.buttonText}>Create Account</Text>
+          <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled ={loading}>
+            <Text style={styles.buttonText}>{loading ? 'Creating Account ...' :'Create Account'}</Text>
           </TouchableOpacity>
 
           <View>
