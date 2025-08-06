@@ -12,12 +12,8 @@ const DriverSignIn = ({ navigation }) => {
 
   const handleSignIn = () => {
     // Basic input check
-    if ( !eid || !password || !confirmpassword) {
+    if ( !eid || !password) {
       Alert.alert('Error', 'Please fill out all fields');
-      return;
-    }
-    if (password !== confirmpassword) {
-      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -59,25 +55,9 @@ const DriverSignIn = ({ navigation }) => {
           placeholderTextColor="#ccc"
         />
 
-        <Text style={styles.label}>Confirm Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Re-enter password"
-          value={confirmpassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          placeholderTextColor="#ccc"
-        />
-
         <TouchableOpacity style={styles.button} onPress={handleSignIn}>
           <Text style={styles.buttonText}>Sign In</Text>
         </TouchableOpacity>
-
-        <View>
-          <Text style={{color: Colors.colorTheme, fontSize: 16, textAlign: 'center', marginTop: 20}}>
-            Student? <Text style={{fontWeight: 'bold'}}>Log In Here</Text>
-          </Text>
-        </View>
 
         {Platform.OS === 'web' && (
           <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
