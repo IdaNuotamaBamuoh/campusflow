@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 import SignUpScreen from './app/pages/signup';
 import Signin from './app/pages/signin';
+import LandingPage from './app/pages/landingPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,12 +31,13 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator initialRouteName="FlashScreen" screenOptions={{ headerShown: false }}>
             <Stack.Screen name="FlashScreen" component={FlashScreen} />
+            <Stack.Screen name="LandingPage" component={LandingPage} />
+            <Stack.Screen name="Signin" component={Signin} />
+            <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="MapScreen" component={MapScreen} />
-            <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
             <Stack.Screen name="Signup" component={SignUpScreen} />
-            <Stack.Screen name="Signin" component={Signin} />
           </Stack.Navigator>
         </NavigationContainer>
       <Toast />
