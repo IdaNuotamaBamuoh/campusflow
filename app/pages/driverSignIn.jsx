@@ -93,6 +93,14 @@ const DriverSignIn = ({ navigation }) => {
           placeholderTextColor="#ccc"
         />
 
+        <View style={{alignSelf: 'flex-end', marginTop: -10}}>
+            <Text style={{color: Colors.colorTheme, fontSize: 16, textAlign: 'center', marginBottom: 10, fontWeight: 'bold'}}
+                onPress={() => navigation.navigate('')}
+            >
+                Forgot Password?
+            </Text>
+        </View>
+
         <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
         </TouchableOpacity>
