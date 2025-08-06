@@ -17,6 +17,46 @@ const DriverMapScreen = ({ route }) => {
     longitudeDelta: 0.01,
   };
 
+  const knustBounds = {
+      north: { latitude: 6.6891, longitude: -1.5640 },
+      south: { latitude: 6.6600, longitude: -1.5650 },
+      east: { latitude: 6.6775, longitude: -1.5400 },
+      west: { latitude: 6.6775, longitude: -1.5900 },
+    };
+  
+    const isInsideKnust = (region) => {
+      const { latitude, longitude } = region;
+      return (
+        latitude >= knustBounds.south.latitude &&
+        latitude <= knustBounds.north.latitude &&
+        longitude >= knustBounds.west.longitude &&
+        longitude <= knustBounds.east.longitude
+      );
+    };
+  
+    const handleRegionChange = useCallback((region) => {
+      if (!isInsideKnust(region)) {
+        if (snapTimeoutRef.current) return;
+  
+        Toast.show({
+          type: 'info',
+          text1: 'Out of bounds',
+          text2: 'Re-centering to KNUST campus in 5 seconds...',
+          visibilityTime: 4000,
+        });
+  
+        snapTimeoutRef.current = setTimeout(() => {
+          mapRef.current?.animateToRegion(initialRegion, 1000);
+          snapTimeoutRef.current = null;
+        }, 5000);
+      } else {
+        if (snapTimeoutRef.current) {
+          clearTimeout(snapTimeoutRef.current);
+          snapTimeoutRef.current = null;
+        }
+      }
+    }, []);
+
   // ✅ Fetch driver info using eid
   useEffect(() => {
     const fetchDriverInfo = async () => {

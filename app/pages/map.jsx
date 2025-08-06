@@ -260,7 +260,7 @@ const CarTrackingMapScreen = () => {
             placeholder="Enter bus stop name..."
             value={searchValue}
             onChangeText={setSearchValue}
-            onFocus={() => sheetRef.current?.open()}
+            onFocus={() => sheetRef.current?.open('top')}
           />
 
           <Text style={styles.header}>🚘 Trip Info</Text>
