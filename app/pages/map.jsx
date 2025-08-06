@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView  } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
 import polyline from '@mapbox/polyline';
@@ -137,7 +137,7 @@ const CarTrackingMapScreen = () => {
 
   const handleDriverTap = (driver) => {
     setSelectedDriver(driver);
-    sheetRef.current?.open('top'); // expands modal fully
+    sheetRef.current?.open('top');
   };
 
   const getDriverIcon = (color) => {
@@ -170,6 +170,10 @@ const CarTrackingMapScreen = () => {
   }
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+      >
     <View style={styles.container}>
       <MapView
         ref={mapRef}
@@ -236,7 +240,7 @@ const CarTrackingMapScreen = () => {
               <View style={{ alignItems: 'center', justifyContent: 'center' }}>
                 <Image
                   source={getDriverIcon(driver.color)}
-                  style={{ width: 40, height: 40 }} // ✅ Adjust size here
+                  style={{ width: 40, height: 40 }}
                   resizeMode="contain"
                 />
               </View>
@@ -244,14 +248,18 @@ const CarTrackingMapScreen = () => {
           ))}
       </MapView>
 
-      {/* Modalize */}
       <Modalize
         ref={sheetRef}
         alwaysOpen={100}
-        snapPoint={400}
+        snapPoint={500}
         modalHeight={500}
         handleStyle={styles.handleIndicator}
+        keyboardAvoidingBehavior="padding"
         adjustToContentHeight={false}
+        withHandle={true}
+        openAnimationConfig={{
+          timing: { duration: 350 },
+        }}
       >
         <View style={styles.sheetContent}>
           <Text style={styles.header}>Where do you want to go?</Text>
@@ -262,6 +270,21 @@ const CarTrackingMapScreen = () => {
             onChangeText={setSearchValue}
             onFocus={() => sheetRef.current?.open('top')}
           />
+
+          {/* Show filtered results */}
+          {searchValue.length > 0 && (
+            <View>
+              {filteredBusStops.length > 0 ? (
+                filteredBusStops.map((stop) => (
+                  <Text key={stop.name} style={styles.resultItem}>
+                    {stop.name}
+                  </Text>
+                ))
+              ) : (
+                <Text style={{ fontStyle: 'italic' }}>No stops found</Text>
+              )}
+            </View>
+          )}
 
           <Text style={styles.header}>🚘 Trip Info</Text>
           {selectedDriver ? (
@@ -275,6 +298,7 @@ const CarTrackingMapScreen = () => {
         </View>
       </Modalize>
     </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -303,6 +327,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 4,
   },
+  resultItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    fontSize: 16,
+  }
+
 });
 
 export default CarTrackingMapScreen;

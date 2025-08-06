@@ -60,9 +60,8 @@ const SignUpScreen = ({ navigation }) => {
         setLoading(false)
       } else {
         if (navigation && navigation.replace && Platform.OS !== 'web') {
-          Alert.alert('Sign Up successful');
-          Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!
-            Please confirm your email to complete the registration.`);
+          Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!`);
+          Alert.alert('Please confirm your email to complete the registration.');
           navigation.replace('MapScreen');
         }}
   };

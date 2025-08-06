@@ -10,7 +10,7 @@ import routesData from '../../assets/data/routes.json';
 import busStopsData from '../../assets/data/busStops.json';
 
 const DriverMapScreen = ({ route }) => {
-  const { driverId } = route.params; // ✅ Passed from login screen
+  const { driverId } = route.params; // Get driverId from route params
   const [location, setLocation] = useState(null);
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +68,7 @@ const DriverMapScreen = ({ route }) => {
       }
     }, []);
 
-  // ✅ Fetch driver info using eid
+  // Fetch driver info using eid
   useEffect(() => {
     const fetchDriverInfo = async () => {
       try {
@@ -96,7 +96,7 @@ const DriverMapScreen = ({ route }) => {
     fetchDriverInfo();
   }, [driverId]);
 
-  // ✅ Get location permission & initial position
+  // Get location permission & initial position
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -110,14 +110,14 @@ const DriverMapScreen = ({ route }) => {
     })();
   }, []);
 
-  // ✅ Update driver location every 5 seconds
+  // Update driver location every 5 seconds
   useEffect(() => {
     if (!location || !driver) return;
 
     const interval = setInterval(async () => {
       if (driverId) {
         const { error } = await supabase
-          .from('driverprofile') // or 'drivers' if that's your tracking table
+          .from('driverprofile') 
           .update({
             latitude: location.latitude,
             longitude: location.longitude,
