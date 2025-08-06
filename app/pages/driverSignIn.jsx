@@ -1,49 +1,83 @@
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, ScrollView } from 'react-native';
 import { Colors } from '../../components/colors';
-
+import { supabase } from '../../backend/supabase';
+import bcrypt from 'bcryptjs';
 
 const DriverSignIn = ({ navigation }) => {
-  const [firstname, setFirstName] = useState('');
   const [eid, setEid] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmpassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = () => {
-    // Basic input check
-    if ( !eid || !password || !confirmpassword) {
-      Alert.alert('Error', 'Please fill out all fields');
-      return;
-    }
-    if (password !== confirmpassword) {
-      Alert.alert('Error', 'Passwords do not match');
+  const handleLogin = async () => {
+    if (!eid || !password) {
+      Alert.alert('Error', 'Please enter Employee ID and Password');
       return;
     }
 
-    // Add backend logic here (e.g. Firebase, server API)
-    Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!`);
-    // Only navigate to MapScreen on native platforms
-    if (navigation && navigation.replace && Platform.OS !== 'web') {
-      navigation.replace('DriverMapScreen', {
-      driverName: firstname || 'Driver',
-});
+    setLoading(true);
+
+    try {
+      // Fetch driver by Employee ID
+      const { data: driver, error } = await supabase
+        .from('driverprofile')
+        .select('*')
+        .eq('eid', eid)
+        .single();
+
+      if (error || !driver) {
+        Alert.alert('Error', 'Invalid Employee ID');
+        setLoading(false);
+        return;
+      }
+
+      if (!driver.password) {
+        Alert.alert('Error', 'Password is missing in database for this user');
+        setLoading(false);
+        return;
+      }
+
+      // Compare password using bcrypt
+      const isPasswordValid = driver.password === password;
+
+      if (!isPasswordValid) {
+        Alert.alert('Error', 'Incorrect password');
+        setLoading(false);
+        return;
+      }
+
+      // ✅ Successful login
+      Alert.alert('Success', `Welcome back, ${driver.name || 'Driver'}!`);
+
+      // Navigate to DriverMapScreen
+      if (navigation && navigation.replace && Platform.OS !== 'web') {
+        navigation.replace('DriverMapScreen', {
+          driverId: driver.id,
+          eid: driver.eid,
+          driverName: driver.name,
+          assignedRoute: driver.route || 'ksbToCommercial',
+        });
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      Alert.alert('Error', 'Something went wrong. Try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
-      <View >
+      <View>
         <View style={styles.titleContainer}>
-          <Text style={[styles.title, {fontWeight: 500}]}>Sign In to</Text>
+          <Text style={[styles.title, { fontWeight: '500' }]}>Log In to</Text>
           <Text style={styles.title}>CAMPUSFLOW</Text>
         </View>
 
         <Text style={styles.label}>Employee ID</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter your employee ID"
+          placeholder="Enter your Employee ID"
           value={eid}
           onChangeText={setEid}
           placeholderTextColor="#ccc"
@@ -59,28 +93,12 @@ const DriverSignIn = ({ navigation }) => {
           placeholderTextColor="#ccc"
         />
 
-        <Text style={styles.label}>Confirm Password</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Re-enter password"
-          value={confirmpassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          placeholderTextColor="#ccc"
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-          <Text style={styles.buttonText}>Sign In</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
         </TouchableOpacity>
 
-        <View>
-          <Text style={{color: Colors.colorTheme, fontSize: 16, textAlign: 'center', marginTop: 20}}>
-            Student? <Text style={{fontWeight: 'bold'}}>Log In Here</Text>
-          </Text>
-        </View>
-
         {Platform.OS === 'web' && (
-          <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
+          <Text style={{ color: 'red', marginTop: 20, textAlign: 'center' }}>
             MapScreen is not available on web. Please use a mobile device or emulator.
           </Text>
         )}
@@ -102,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
   title: {
     fontSize: 28,
@@ -135,9 +153,9 @@ const styles = StyleSheet.create({
   },
   label: {
     color: Colors.secondaryBackground,
-    fontWeight: 600,
-    marginBottom: 10
-  }
+    fontWeight: '600',
+    marginBottom: 10,
+  },
 });
 
 export default DriverSignIn;

@@ -2,27 +2,38 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, S
 import { useState } from 'react'
 import React from 'react'
 import { Colors } from '../../components/colors'
+import { supabase } from '../../backend/supabase';
+
 
 const Signin = ({ navigation }) => {
     const [studentemail, setStudentEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSignIn = () => {
+    const handleSignIn = async () => {
         // Basic input check
         if (!studentemail || !password) {
           Alert.alert('Error', 'Please fill out all fields');
           return;
         }
-        if (password !== confirmpassword) {
-          Alert.alert('Error', 'Passwords do not match');
-          return;
-        }
-    
-        // Add backend logic here (e.g. Firebase, server API)
-        Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!`);
-        // Only navigate to MapScreen on native platforms
+        
+        setLoading(true);
+        const { error } = await supabase.auth.signInWithPassword({
+            email: studentemail,
+            password: password,
+        });
+
+        setLoading(false);
+
+        if (error) {
+            Alert.alert('Login Failed', error.message);
+            return;
+         }
+
+        // ✅ Navigate after successful login
         if (navigation && navigation.replace && Platform.OS !== 'web') {
-          navigation.replace('MapScreen'); // Navigate to the main app screen after sign up
+            Alert.alert('Welcome back!', 'You have successfully signed in.');
+            navigation.replace('MapScreen'); // Ensure MapScreen is registered in your navigator
         }
       };
   return (
@@ -69,7 +80,7 @@ const Signin = ({ navigation }) => {
                         </Text>
                     </View>
 
-                    <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+                    <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
                         <Text style={styles.buttonText}>Sign In</Text>
                     </TouchableOpacity>
 

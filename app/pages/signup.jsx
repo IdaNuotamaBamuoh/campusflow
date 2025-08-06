@@ -1,17 +1,20 @@
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, SafeAreaView, StatusBar, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
+Platform, SafeAreaView, StatusBar, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Colors } from '../../components/colors';
+import { supabase } from '../../backend/supabase';
 
 
 const SignUpScreen = ({ navigation }) => {
+  const [loading, setLoading] = useState(false);
   const [firstname, setFirstName] = useState('');
   const [surname, setSurname] = useState('');
   const [studentemail, setStudentEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmpassword, setConfirmPassword] = useState('');
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     // Basic input check
     if (!firstname || !surname || !studentemail || !password || !confirmpassword) {
       Alert.alert('Error', 'Please fill out all fields');
@@ -22,12 +25,46 @@ const SignUpScreen = ({ navigation }) => {
       return;
     }
 
-    // Add backend logic here (e.g. Firebase, server API)
-    Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!`);
-    // Only navigate to MapScreen on native platforms
-    if (navigation && navigation.replace && Platform.OS !== 'web') {
-      navigation.replace('MapScreen'); // Navigate to the main app screen after sign up
+    setLoading(true);
+    const { data: {user}, error } = await supabase.auth.signUp({
+      email: studentemail,
+      password,
+    });
+        
+    if (error) {
+      Alert.alert('Sign Up failed', error.message);
+      setLoading(false);
+      return;
     }
+    if (password !== confirmpassword) {
+      Alert.alert('Passwords do not match')
+      setLoading (false)
+      return;
+    }
+
+    const { error: insertError,  } = await supabase
+      .from('stdprofile')
+      .upsert([
+        {
+          id: user?.id,
+          fname: firstname,
+          lname: surname,
+          stdmail: studentemail
+        }
+      ]);
+
+      setLoading(false);
+
+      if (insertError) {
+        Alert.alert('Sign Up failed', insertError.message);
+        setLoading(false)
+      } else {
+        if (navigation && navigation.replace && Platform.OS !== 'web') {
+          Alert.alert('Sign Up successful');
+          Alert.alert('Success', `Welcome to CAMPUSFLOW, ${firstname}!
+            Please confirm your email to complete the registration.`);
+          navigation.replace('MapScreen');
+        }}
   };
 
   return (

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { supabase } from '../../assets/backend/supabase';
+import { supabase } from '../../backend/supabase';
 
-const DriverMapScreen = () => {
+const DriverMapScreen = ({ route }) => {
+  const { driverId } = route.params; // ✅ Passed from login screen
   const [location, setLocation] = useState(null);
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,39 +17,33 @@ const DriverMapScreen = () => {
     longitudeDelta: 0.01,
   };
 
-  // ✅ Fetch logged-in user & driver info
+  // ✅ Fetch driver info using eid
   useEffect(() => {
     const fetchDriverInfo = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+      try {
+        const { data: driverData, error } = await supabase
+          .from('driverprofile')
+          .select('*')
+          .eq('id', driverId)
+          .single();
 
-      if (error || !user) {
-        Alert.alert('Error', 'User not logged in');
+        if (error || !driverData) {
+          Alert.alert('Error', 'Driver record not found');
+          setLoading(false);
+          return;
+        }
+
+        setDriver(driverData);
+      } catch (err) {
+        console.error('Error fetching driver info:', err);
+        Alert.alert('Error', 'Something went wrong while fetching driver info.');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      // Fetch driver record
-      const { data: driverData, error: driverError } = await supabase
-        .from('driverprofile')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (driverError || !driverData) {
-        Alert.alert('Error', 'Driver record not found');
-        setLoading(false);
-        return;
-      }
-
-      setDriver(driverData);
-      setLoading(false);
     };
 
     fetchDriverInfo();
-  }, []);
+  }, [driverId]);
 
   // ✅ Get location permission & initial position
   useEffect(() => {
@@ -69,12 +64,19 @@ const DriverMapScreen = () => {
     if (!location || !driver) return;
 
     const interval = setInterval(async () => {
-      await supabase.from('drivers').upsert({
-        name: driver.name,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        route: driver.route, // Comes from DB
-      });
+      if (driverId) {
+        const { error } = await supabase
+          .from('driverprofile') // or 'drivers' if that's your tracking table
+          .update({
+            latitude: location.latitude,
+            longitude: location.longitude,
+          })
+          .eq('id', driverId);
+
+        if (error) {
+          console.error('Error updating location:', error);
+        }
+      }
     }, 5000);
 
     return () => clearInterval(interval);
