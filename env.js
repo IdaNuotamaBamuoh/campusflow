@@ -1,1 +1,3 @@
 export const GOOGLE_MAPS_API_KEY='AIzaSyCJc0jCcxS9zM5TYzbKyv7YYHOWTCr5Qcs';
+export const SUPABASE_URL = "https://jcnlyeswhjellzzcsakx.supabase.co";
+export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impjbmx5ZXN3aGplbGx6emNzYWt4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MTQ1NjQsImV4cCI6MjA2OTk5MDU2NH0.yZY405-G-mRJU0l-iu45QaLbg9uPmXQBdX2YPx8TROw";
