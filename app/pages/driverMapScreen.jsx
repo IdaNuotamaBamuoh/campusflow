@@ -1,14 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { supabase } from '../../backend/supabase';
+import Toast from 'react-native-toast-message';
+import polyline from '@mapbox/polyline';
+import { GOOGLE_MAPS_API_KEY } from '../../env';
+import routesData from '../../assets/data/routes.json';
+import busStopsData from '../../assets/data/busStops.json';
 
 const DriverMapScreen = ({ route }) => {
   const { driverId } = route.params; // ✅ Passed from login screen
   const [location, setLocation] = useState(null);
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [roadRoutes, setRoadRoutes] = useState({});
+
+  
+  //const sheetRef = useRef(null);
+  const mapRef = useRef(null);
+  const snapTimeoutRef = useRef(null);
 
   const initialRegion = {
     latitude: 6.6731,
@@ -122,6 +133,39 @@ const DriverMapScreen = ({ route }) => {
     return () => clearInterval(interval);
   }, [location, driver]);
 
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) {
+      console.warn('Google Maps API key not found');
+      return;
+    }
+
+    Object.entries(routesData).forEach(async ([key, coords]) => {
+      if (!coords || coords.length < 2) return;
+      const origin = `${coords[0].latitude},${coords[0].longitude}`;
+      const destination = `${coords[coords.length - 1].latitude},${coords[coords.length - 1].longitude}`;
+      const waypoints = coords
+        .slice(1, -1)
+        .map((coord) => `${coord.latitude},${coord.longitude}`)
+        .join('|');
+
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${origin}&destination=${destination}${
+        waypoints ? `&waypoints=${waypoints}` : ''
+      }&key=${GOOGLE_MAPS_API_KEY}&mode=driving`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.routes && data.routes.length) {
+          const points = polyline.decode(data.routes[0].overview_polyline.points);
+          const routeCoords = points.map(([latitude, longitude]) => ({ latitude, longitude }));
+          setRoadRoutes((prev) => ({ ...prev, [key]: routeCoords }));
+        }
+      } catch (e) {
+        console.error(`Failed to fetch Google Directions route for ${key}`, e);
+      }
+    });
+  }, []);
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -152,10 +196,37 @@ const DriverMapScreen = ({ route }) => {
     <View style={styles.container}>
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
         initialRegion={initialRegion}
+        onRegionChangeComplete={handleRegionChange}
+        minDelta={0.005}
+        maxDelta={0.03}
+        minZoomLevel={14.4}
+        maxZoomLevel={19}
+        scrollEnabled
+        zoomEnabled
+        pitchEnabled={false}
+        rotateEnabled={false}
         showsUserLocation
+        provider={PROVIDER_GOOGLE}
       >
+
+      {busStopsData.map((stop) => (
+          <Marker
+            key={stop.name}
+            coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+            title={stop.name}
+            pinColor="#29722F"
+          />
+        ))}
+        {Object.keys(roadRoutes).map((routeKey) => (
+            <Polyline
+              key={routeKey}
+              coordinates={roadRoutes[routeKey]}
+              strokeColor="#007AFF"
+              strokeWidth={5}
+            />
+          )
+        )}
         <Marker
           coordinate={{
             latitude: location.latitude,
