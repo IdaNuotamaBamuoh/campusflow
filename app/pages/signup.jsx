@@ -142,13 +142,6 @@ const SignUpScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#444', marginTop: 20 }]}
-            onPress={() => navigation.navigate('DriverSignIn')}
-          >
-            <Text style={styles.buttonText}>Sign In as Driver</Text>
-          </TouchableOpacity>
-
           {Platform.OS === 'web' && (
             <Text style={{color: 'red', marginTop: 20, textAlign: 'center'}}>
               MapScreen is not available on web. Please use a mobile device or emulator.
