@@ -10,7 +10,7 @@ const FlashScreen = ({ navigation }) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.replace('MainApp'); // Redirect after delay
+      navigation.replace('LandingPage'); // Redirect after delay
     }, 3000); // Duration in ms
 
     return () => clearTimeout(timer);
