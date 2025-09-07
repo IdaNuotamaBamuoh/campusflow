@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView  } from 'react-native';
+import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView, SafeAreaView  } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
 import polyline from '@mapbox/polyline';
@@ -174,7 +174,7 @@ const CarTrackingMapScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
       >
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -297,13 +297,13 @@ const CarTrackingMapScreen = () => {
           )}
         </View>
       </Modalize>
-    </View>
+    </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1,  },
   map: { ...StyleSheet.absoluteFillObject },
   sheetContent: { padding: 20, backgroundColor: '#f5f5f5', flexGrow: 1 },
   handleIndicator: {

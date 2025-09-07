@@ -35,8 +35,8 @@ export default function App() {
             <Stack.Screen name="Signin" component={Signin} />
             <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="MainApp" component={MainApp} />
-            <Stack.Screen name="MapScreen" component={MapScreen} />
-            <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
+            <Stack.Screen name="MapScreen" component={MapScreen} options={{headerShown: true}} />
+            <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} options={{headerShown: true}} />
             <Stack.Screen name="Signup" component={SignUpScreen} />
           </Stack.Navigator>
         </NavigationContainer>
