@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView, SafeAreaView  } from 'react-native';
+import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView, SafeAreaView, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { StatusBar } from 'expo-status-bar';
 import { Modalize } from 'react-native-modalize';
 import polyline from '@mapbox/polyline';
 import { GOOGLE_MAPS_API_KEY } from '../../env';
@@ -8,8 +9,15 @@ import Toast from 'react-native-toast-message';
 import routesData from '../../assets/data/routes.json';
 import busStopsData from '../../assets/data/busStops.json';
 import { supabase } from '../../backend/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 
 const CarTrackingMapScreen = () => {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+   // Navigation for opening drawer
   const sheetRef = useRef(null);
   const mapRef = useRef(null);
   const snapTimeoutRef = useRef(null);
@@ -135,6 +143,30 @@ const CarTrackingMapScreen = () => {
     });
   }, []);
 
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (event) => {
+        setKeyboardOffset(event.endHeight);
+        // Open modal to top when keyboard appears
+        sheetRef.current?.open('top');
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardOffset(0);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
   const handleDriverTap = (driver) => {
     setSelectedDriver(driver);
     sheetRef.current?.open('top');
@@ -142,16 +174,11 @@ const CarTrackingMapScreen = () => {
 
   const getDriverIcon = (color) => {
     switch (color) {
-      case 'red':
-        return require('../../assets/images/busLocations/bus_red.png');
-      case 'blue':
-        return require('../../assets/images/busLocations/bus_blue.png');
-      case 'green':
-        return require('../../assets/images/busLocations/bus_green.png');
-      case 'yellow':
-        return require('../../assets/images/busLocations/bus_yellow.png');
-      case 'orange':
-        return require('../../assets/images/busLocations/bus_orange.png');
+      case 'red': return require('../../assets/images/busLocations/bus_red.png');
+      case 'blue': return require('../../assets/images/busLocations/bus_blue.png');
+      case 'green': return require('../../assets/images/busLocations/bus_green.png');
+      case 'yellow': return require('../../assets/images/busLocations/bus_yellow.png');
+      case 'orange': return require('../../assets/images/busLocations/bus_orange.png');
     }
   };
 
@@ -172,140 +199,191 @@ const CarTrackingMapScreen = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight || 0}
       style={{ flex: 1 }}
-      >
-    <SafeAreaView style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={initialRegion}
-        onRegionChangeComplete={handleRegionChange}
-        minDelta={0.005}
-        maxDelta={0.03}
-        minZoomLevel={14.4}
-        maxZoomLevel={19}
-        scrollEnabled
-        zoomEnabled
-        pitchEnabled={false}
-        rotateEnabled={false}
-        provider={PROVIDER_GOOGLE}
-      >
-        {/* Bus Stops */}
-        {busStopsData.map((stop) => (
-          <Marker
-            key={stop.name}
-            coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
-            title={stop.name}
-            pinColor="#29722F"
-          />
-        ))}
-
-        {/* Other Routes */}
-        {Object.keys(roadRoutes).map((routeKey) =>
-          selectedDriver && selectedDriver.route === routeKey ? null : (
-            <Polyline
-              key={routeKey}
-              coordinates={roadRoutes[routeKey]}
-              strokeColor="#007AFF"
-              strokeWidth={5}
-              zIndex={10}
-            />
-          )
-        )}
-
-        {/* Selected Route */}
-        {selectedDriver && roadRoutes[selectedDriver.route] && (
-          <Polyline
-            coordinates={roadRoutes[selectedDriver.route]}
-            strokeColor={selectedDriver.color || '#FF0000'}
-            strokeWidth={6}
-            zIndex={100}
-          />
-        )}
-
-        {/* Drivers with custom icons */}
-        {drivers
-          .filter((driver) => driver.latitude && driver.longitude)
-          .map((driver) => (
+    >
+      <SafeAreaView style={styles.container}>
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={initialRegion}
+          onRegionChangeComplete={handleRegionChange}
+          minDelta={0.005}
+          maxDelta={0.03}
+          minZoomLevel={14.4}
+          maxZoomLevel={19}
+          scrollEnabled
+          zoomEnabled
+          pitchEnabled={false}
+          rotateEnabled={false}
+          provider={PROVIDER_GOOGLE}
+        >
+          {/* Bus Stops */}
+          {busStopsData.map((stop) => (
             <Marker
-              key={driver.id}
-              coordinate={{
-                latitude: driver.latitude,
-                longitude: driver.longitude,
-              }}
-              title={driver.name}
-              description={`Route: ${driver.route}`}
-              onPress={() => handleDriverTap(driver)}
-            >
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Image
-                  source={getDriverIcon(driver.color)}
-                  style={{ width: 40, height: 40 }}
-                  resizeMode="contain"
-                />
-              </View>
-            </Marker>
+              key={stop.name}
+              coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+              title={stop.name}
+              pinColor="#29722F"
+            />
           ))}
-      </MapView>
 
-      <Modalize
-        ref={sheetRef}
-        alwaysOpen={100}
-        snapPoint={500}
-        modalHeight={500}
-        handleStyle={styles.handleIndicator}
-        keyboardAvoidingBehavior="padding"
-        adjustToContentHeight={false}
-        withHandle={true}
-        openAnimationConfig={{
-          timing: { duration: 350 },
-        }}
-      >
-        <View style={styles.sheetContent}>
-          <Text style={styles.header}>Where do you want to go?</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Enter bus stop name..."
-            value={searchValue}
-            onChangeText={setSearchValue}
-            onFocus={() => sheetRef.current?.open('top')}
-          />
-
-          {/* Show filtered results */}
-          {searchValue.length > 0 && (
-            <View>
-              {filteredBusStops.length > 0 ? (
-                filteredBusStops.map((stop) => (
-                  <Text key={stop.name} style={styles.resultItem}>
-                    {stop.name}
-                  </Text>
-                ))
-              ) : (
-                <Text style={{ fontStyle: 'italic' }}>No stops found</Text>
-              )}
-            </View>
+          {/* Other Routes */}
+          {Object.keys(roadRoutes).map((routeKey) =>
+            selectedDriver && selectedDriver.route === routeKey ? null : (
+              <Polyline
+                key={routeKey}
+                coordinates={roadRoutes[routeKey]}
+                strokeColor="#007AFF"
+                strokeWidth={5}
+                zIndex={10}
+              />
+            )
           )}
 
-          <Text style={styles.header}>🚘 Trip Info</Text>
-          {selectedDriver ? (
-            <>
-              <Text style={styles.driverInfo}>Driver: {selectedDriver.name}</Text>
-              <Text style={styles.driverInfo}>Route: {selectedDriver.route}</Text>
-            </>
-          ) : (
-            <Text style={{ fontStyle: 'italic' }}>Tap a driver to view details</Text>
+          {/* Selected Route */}
+          {selectedDriver && roadRoutes[selectedDriver.route] && (
+            <Polyline
+              coordinates={roadRoutes[selectedDriver.route]}
+              strokeColor={selectedDriver.color || '#FF0000'}
+              strokeWidth={6}
+              zIndex={100}
+            />
           )}
-        </View>
-      </Modalize>
-    </SafeAreaView>
+
+          {/* Drivers with custom icons */}
+          {drivers
+            .filter((driver) => driver.latitude && driver.longitude)
+            .map((driver) => (
+              <Marker
+                key={driver.id}
+                coordinate={{
+                  latitude: driver.latitude,
+                  longitude: driver.longitude,
+                }}
+                title={driver.name}
+                description={`Route: ${driver.route}`}
+                onPress={() => handleDriverTap(driver)}
+              >
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Image
+                    source={getDriverIcon(driver.color)}
+                    style={{ width: 40, height: 40 }}
+                    resizeMode="contain"
+                  />
+                </View>
+              </Marker>
+            ))}
+        </MapView>
+
+        <Modalize
+          ref={sheetRef}
+          alwaysOpen={100}
+          snapPoint={500}
+          modalHeight={500}
+          handleStyle={styles.handleIndicator}
+          keyboardAvoidingBehavior="padding" // <-- Helps modal adjust when keyboard shows
+          keyboardAvoidingOffset={Platform.OS === 'ios' ? 80 : 20} // <-- Small offset
+          avoidKeyboardLikeIOS={true} // <-- Keeps consistent behavior
+          adjustToContentHeight={false}
+        >
+
+          <View style={[styles.sheetContent, { paddingBottom: insets.bottom || 20 }]}>
+            <Text style={styles.header}>Where do you want to go?</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Enter bus stop name..."
+              value={searchValue}
+              onChangeText={setSearchValue}
+              onFocus={() => {
+                sheetRef.current?.open('top');
+              }}
+            />
+
+            {/* Show filtered results */}
+            {searchValue.length > 0 && (
+              <ScrollView 
+                style={styles.resultsScroll}
+                keyboardShouldPersistTaps="handled"
+              >
+                {filteredBusStops.length > 0 ? (
+                  filteredBusStops.map((stop) => (
+                    <TouchableOpacity 
+                      key={stop.name} 
+                      style={styles.resultItem}
+                      onPress={() => {
+                        setSearchValue(stop.name);
+                        Keyboard.dismiss();
+                      }}
+                    >
+                      <Text style={styles.resultText}>{stop.name}</Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text style={styles.noResults}>No stops found</Text>
+                )}
+              </ScrollView>
+            )}
+
+            <Text style={styles.header}>🚘 Trip Info</Text>
+            {selectedDriver ? (
+              <>
+                <Text style={styles.driverInfo}>Driver: {selectedDriver.name}</Text>
+                <Text style={styles.driverInfo}>Route: {selectedDriver.route}</Text>
+                <Text style={styles.driverInfo}>Status: {selectedDriver.status || 'Active'}</Text>
+              </>
+            ) : (
+              <Text style={styles.noSelection}>Tap a driver to view details</Text>
+            )}
+          </View>
+        </Modalize>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1,  },
+  container: { flex: 1 },
   map: { ...StyleSheet.absoluteFillObject },
-  sheetContent: { padding: 20, backgroundColor: '#f5f5f5', flexGrow: 1 },
+  menuBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#fff',
+    elevation: 3,
+    zIndex: 9999,
+  },
+  title: {
+    fontSize: 18,
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  sheetContent: { 
+    padding: 20, 
+    backgroundColor: '#f5f5f5',
+    minHeight: 500 
+  },
+  resultsScroll: {
+    maxHeight: 200, // Limit the height of results
+    marginBottom: 20,
+  },
+  resultItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  resultText: {
+    fontSize: 16,
+  },
+  noResults: {
+    fontStyle: 'italic',
+    color: '#666',
+    paddingVertical: 10,
+  },
+  noSelection: {
+    fontStyle: 'italic',
+    color: '#666',
+  },
   handleIndicator: {
     width: 40,
     height: 5,
@@ -332,8 +410,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     fontSize: 16,
-  }
-
+  },
 });
 
 export default CarTrackingMapScreen;
