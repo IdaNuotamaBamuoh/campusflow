@@ -239,7 +239,7 @@ const CarTrackingMapScreen = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : StatusBar.currentHeight || 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : StatusBar.currentHeight || 0}
       style={{ flex: 1 }}
       >
     <SafeAreaView style={styles.container}>
@@ -264,9 +264,33 @@ const CarTrackingMapScreen = () => {
             key={stop.name}
             coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
             title={stop.name}
-            pinColor="#29722F"
-          />
+            >
+            <Image
+              source={require('../../assets/images/busStop_bus.png')}
+              style={{ width: 25, height: 25 }}
+              resizeMode="contain"
+            />
+          </Marker>
         ))}
+
+        {/* Highlight selected destination */}
+        {selectedDestination && (
+          <Marker
+            key="selected-destination"
+            coordinate={{ 
+              latitude: selectedDestination.latitude, 
+              longitude: selectedDestination.longitude 
+            }}
+            title={selectedDestination.name}
+            description="Selected Destination"
+          >
+            <Image
+              source={require('../../assets/images/selectedBus_stop.png')}
+              style={{ width: 25, height: 25 }}
+              resizeMode="contain"
+          />
+          </Marker>
+        )}
 
           {/* Other Routes */}
           {Object.keys(roadRoutes).map((routeKey) =>
@@ -319,13 +343,17 @@ const CarTrackingMapScreen = () => {
         <Modalize
           ref={sheetRef}
           alwaysOpen={100}
-          snapPoint={500}
+          snapPoint={150}
           modalHeight={250}
           handleStyle={styles.handleIndicator}
           keyboardAvoidingBehavior="padding" // <-- Helps modal adjust when keyboard shows
-          keyboardAvoidingOffset={Platform.OS === 'ios' ? 80 : 20} // <-- Small offset
+          keyboardAvoidingOffset={Platform.OS === 'ios' ? 60 : 20} // <-- Small offset
           avoidKeyboardLikeIOS={true} // <-- Keeps consistent behavior
           adjustToContentHeight={false}
+          disableScrollIfPossible={true}
+          openAnimationConfig={{
+            timing: { duration: 350 },
+          }}
         >
 
           <View style={[styles.sheetContent, { paddingBottom: insets.bottom || 20 }]}>
@@ -373,13 +401,18 @@ const CarTrackingMapScreen = () => {
                   filteredBusStops.map((stop) => (
                     <TouchableOpacity 
                       key={stop.name} 
-                      style={styles.resultItem}
-                      onPress={() => {
-                        setSearchValue(stop.name);
-                        Keyboard.dismiss();
-                      }}
+                    style={[
+                      styles.resultItem,
+                      selectedDestination?.name === stop.name && styles.selectedResultItem
+                    ]}
+                    onPress={() => handleBusStopTap(stop)}
                     >
-                      <Text style={styles.resultText}>{stop.name}</Text>
+                    <Text style={[
+                      styles.resultText,
+                      selectedDestination?.name === stop.name && styles.selectedResultText
+                    ]}>
+                      {stop.name}
+                    </Text>
                     </TouchableOpacity>
                   ))
                 ) : (
@@ -396,7 +429,44 @@ const CarTrackingMapScreen = () => {
               <Text style={styles.driverInfo}>Status: {selectedDriver.status || 'Active'}</Text>
             </>
           ) : (
-            <Text style={styles.noSelection}>Tap a driver to view details</Text>
+            <>
+            <Text style={styles.placeholderText}>Tap a driver to view details</Text>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, alignContent: 'center'}}>
+              <View style={{alignItems: 'center'}}>
+                <Text style={{fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginBottom: 5}}>Bus Stop</Text>
+                <Image
+                source={require('../../assets/images/busStop_bus.png')}
+                style={{ width: 25, height: 25 }}
+                resizeMode="contain"
+              />
+              </View>
+              <View style={{alignItems: 'center'}}>
+                <Text style={{fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginBottom: 5}}>Selected Bus Stop</Text>
+                <Image
+                source={require('../../assets/images/selectedBus_stop.png')}
+                style={{ width: 25, height: 25 }}
+                resizeMode="contain"
+              />
+              </View>
+              <View style={{alignItems: 'center'}}>
+                <Text style={{fontSize: 12, fontWeight: 'bold', textAlign: 'center', marginBottom: 5}}>Bus Driver</Text>
+                <Image
+                  source={require('../../assets/images/bus_black.png')}
+                  style={{ width: 25, height: 25 }}
+                  resizeMode="contain"
+              />
+              </View>
+              
+            </View>
+            
+            </>
+            
+          )}
+          
+          {selectedDestination && (
+            <Text style={styles.destinationInfo}>
+              📍 Destination: {selectedDestination.name}
+            </Text>
           )}
         </View>
       </Modalize>
@@ -424,7 +494,6 @@ const styles = StyleSheet.create({
   sheetContent: { 
     padding: 20, 
     backgroundColor: '#f5f5f5',
-    minHeight: 500 
   },
   resultsScroll: {
     maxHeight: 200, // Limit the height of results
