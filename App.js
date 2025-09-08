@@ -3,6 +3,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import FlashScreen from './app/pages/splash';
 import MainApp from './app/pages/signup'; // Your actual app screen
 import { useFonts } from 'expo-font';
@@ -14,8 +15,47 @@ import Toast from 'react-native-toast-message';
 import SignUpScreen from './app/pages/signup';
 import Signin from './app/pages/signin';
 import LandingPage from './app/pages/landingPage';
+import About from './app/pages/aboutScreen';
+import CarTrackingMapScreen from './app/pages/map';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from './components/colors';
 
 const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
+
+function MapMenuNavigator() {
+  return (
+    <Drawer.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: Colors.colorTheme },
+        headerTintColor: '#fff',
+        drawerActiveTintColor: '#29722F',
+        drawerLabelStyle: { fontSize: 16 },
+      }}
+    >
+      <Drawer.Screen
+        name="Routes"
+        component={CarTrackingMapScreen}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="map-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="About"
+        headerTitle="About"
+        component={About}
+        options={{
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="information-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+    </Drawer.Navigator>
+  );
+}
+
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -35,8 +75,12 @@ export default function App() {
             <Stack.Screen name="Signin" component={Signin} />
             <Stack.Screen name="DriverSignIn" component={DriverSignIn} />
             <Stack.Screen name="MainApp" component={MainApp} />
-            <Stack.Screen name="MapScreen" component={MapScreen} />
-            <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} />
+            <Stack.Screen name="MapMenu" component={MapMenuNavigator} />
+            <Stack.Screen name="DriverMapScreen" component={DriverMapScreen} options={{headerShown: true,
+              headerTitle: 'Driver Map',
+              headerStyle: { backgroundColor: Colors.colorTheme },
+              headerTintColor: '#fff',
+            }} />
             <Stack.Screen name="Signup" component={SignUpScreen} />
           </Stack.Navigator>
         </NavigationContainer>

@@ -33,7 +33,7 @@ const Signin = ({ navigation }) => {
         // ✅ Navigate after successful login
         if (navigation && navigation.replace && Platform.OS !== 'web') {
             Alert.alert('Welcome back!', 'You have successfully signed in.');
-            navigation.replace('MapScreen'); // Ensure MapScreen is registered in your navigator
+            navigation.replace('MapMenu'); // Ensure MapMenu is registered in your navigator
         }
       };
   return (
