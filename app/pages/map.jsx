@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView  } from 'react-native';
+import { View, Text, StyleSheet, Platform, TextInput, Image, KeyboardAvoidingView, TouchableOpacity, ScrollView } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Modalize } from 'react-native-modalize';
 import polyline from '@mapbox/polyline';
@@ -18,6 +18,7 @@ const CarTrackingMapScreen = () => {
   const [drivers, setDrivers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchValue, setSearchValue] = useState('');
+  const [selectedDestination, setSelectedDestination] = useState(null);
 
   const initialRegion = {
     latitude: 6.6731,
@@ -140,6 +141,45 @@ const CarTrackingMapScreen = () => {
     sheetRef.current?.open('top');
   };
 
+  const handleBusStopTap = (stop) => {
+    setSearchValue(stop.name);
+    setSelectedDestination(stop);
+    // Optionally animate to the bus stop location
+    mapRef.current?.animateToRegion({
+      latitude: stop.latitude,
+      longitude: stop.longitude,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
+    }, 1000);
+    // Close the sheet to show more of the map
+    sheetRef.current?.open();
+  };
+
+  const handleSearch = () => {
+    if (selectedDestination) {
+      Toast.show({
+        type: 'success',
+        text1: 'Destination Set',
+        text2: `Navigating to ${selectedDestination.name}`,
+        visibilityTime: 3000,
+      });
+      // Add your search/navigation logic here
+      console.log('Searching for route to:', selectedDestination);
+    } else {
+      Toast.show({
+        type: 'error',
+        text1: 'No Destination Selected',
+        text2: 'Please select a bus stop first',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchValue('');
+    setSelectedDestination(null);
+  };
+
   const getDriverIcon = (color) => {
     switch (color) {
       case 'red':
@@ -196,9 +236,32 @@ const CarTrackingMapScreen = () => {
             key={stop.name}
             coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
             title={stop.name}
-            pinColor="#29722F"
-          />
+            >
+            {!selectedDestination &&(<Image
+              source={require('../../assets/images/busStop_bus.png')}
+              style={{ width: 25, height: 25 }}
+              resizeMode="contain"
+            />)}
+          </Marker>
         ))}
+
+        {/* Highlight selected destination */}
+        {selectedDestination && (
+          <Marker
+            coordinate={{ 
+              latitude: selectedDestination.latitude, 
+              longitude: selectedDestination.longitude 
+            }}
+            title={selectedDestination.name}
+            description="Selected Destination"
+          >
+            <Image
+              source={require('../../assets/images/selectedBus_stop.png')}
+              style={{ width: 25, height: 25 }}
+              resizeMode="contain"
+            />
+          </Marker>
+        )}
 
         {/* Other Routes */}
         {Object.keys(roadRoutes).map((routeKey) =>
@@ -252,7 +315,7 @@ const CarTrackingMapScreen = () => {
         ref={sheetRef}
         alwaysOpen={100}
         snapPoint={500}
-        modalHeight={500}
+        modalHeight={250}
         handleStyle={styles.handleIndicator}
         keyboardAvoidingBehavior="padding"
         adjustToContentHeight={false}
@@ -263,27 +326,62 @@ const CarTrackingMapScreen = () => {
       >
         <View style={styles.sheetContent}>
           <Text style={styles.header}>Where do you want to go?</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Enter bus stop name..."
-            value={searchValue}
-            onChangeText={setSearchValue}
-            onFocus={() => sheetRef.current?.open('top')}
-          />
+          
+          {/* Search Input Container */}
+          <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Enter bus stop name..."
+              value={searchValue}
+              onChangeText={setSearchValue}
+              onFocus={() => sheetRef.current?.open('top')}
+            />
+            
+            {/* Search and Clear Buttons */}
+            {searchValue.length > 0 && (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={styles.clearButton} 
+                  onPress={clearSearch}
+                >
+                  <Text style={styles.clearButtonText}>Clear</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.searchButton} 
+                  onPress={handleSearch}
+                >
+                  <Text style={styles.searchButtonText}>Search</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
 
           {/* Show filtered results */}
           {searchValue.length > 0 && (
-            <View>
+            <ScrollView style={styles.resultsContainer} nestedScrollEnabled>
               {filteredBusStops.length > 0 ? (
                 filteredBusStops.map((stop) => (
-                  <Text key={stop.name} style={styles.resultItem}>
-                    {stop.name}
-                  </Text>
+                  <TouchableOpacity
+                    key={stop.name}
+                    style={[
+                      styles.resultItem,
+                      selectedDestination?.name === stop.name && styles.selectedResultItem
+                    ]}
+                    onPress={() => handleBusStopTap(stop)}
+                  >
+                    <Text style={[
+                      styles.resultText,
+                      selectedDestination?.name === stop.name && styles.selectedResultText
+                    ]}>
+                      {stop.name}
+                    </Text>
+                  </TouchableOpacity>
                 ))
               ) : (
-                <Text style={{ fontStyle: 'italic' }}>No stops found</Text>
+                <Text style={styles.noResultsText}>No stops found</Text>
               )}
-            </View>
+            </ScrollView>
           )}
 
           <Text style={styles.header}>🚘 Trip Info</Text>
@@ -293,7 +391,13 @@ const CarTrackingMapScreen = () => {
               <Text style={styles.driverInfo}>Route: {selectedDriver.route}</Text>
             </>
           ) : (
-            <Text style={{ fontStyle: 'italic' }}>Tap a driver to view details</Text>
+            <Text style={styles.placeholderText}>Tap a driver to view details</Text>
+          )}
+          
+          {selectedDestination && (
+            <Text style={styles.destinationInfo}>
+              📍 Destination: {selectedDestination.name}
+            </Text>
           )}
         </View>
       </Modalize>
@@ -315,25 +419,96 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   header: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  searchContainer: {
+    marginBottom: 20,
+  },
   searchInput: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 10,
-    marginBottom: 20,
     borderWidth: 1,
     borderColor: '#ccc',
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  searchButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 5,
+  },
+  searchButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  clearButton: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginRight: 5,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  resultsContainer: {
+    maxHeight: 200,
+    marginBottom: 20,
+  },
+  resultItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 2,
+  },
+  selectedResultItem: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#007AFF',
+    borderWidth: 1,
+  },
+  resultText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedResultText: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  noResultsText: {
+    fontStyle: 'italic',
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
   },
   driverInfo: {
     fontSize: 16,
     marginVertical: 4,
   },
-  resultItem: {
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+  placeholderText: {
+    fontStyle: 'italic',
+    color: '#666',
+  },
+  destinationInfo: {
     fontSize: 16,
-  }
-
+    marginTop: 10,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
 });
 
 export default CarTrackingMapScreen;

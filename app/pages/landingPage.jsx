@@ -1,7 +1,19 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform, SafeAreaView, StatusBar, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { Colors } from '../../components/colors';
+import { supabase } from '../../backend/supabase';
+import { useEffect } from 'react';
 
 const LandingPage = ({ navigation }) => {
+    useEffect(() => {
+        const checkUser = async () => {
+          const user = supabase.auth.user();
+          if (user && navigation && navigation.replace && Platform.OS !== 'web') {
+            navigation.replace('MapScreen');
+          }
+        };
+        checkUser();
+      }, [navigation]);
+
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.titleContainer}>
