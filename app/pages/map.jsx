@@ -254,6 +254,7 @@ const CarTrackingMapScreen = () => {
         maxZoomLevel={19}
         scrollEnabled
         zoomEnabled
+        showsUserLocation
         pitchEnabled={false}
         rotateEnabled={false}
         provider={PROVIDER_GOOGLE}
@@ -426,7 +427,7 @@ const CarTrackingMapScreen = () => {
             <>
               <Text style={styles.driverInfo}>Driver: {selectedDriver.name}</Text>
               <Text style={styles.driverInfo}>Route: {selectedDriver.route}</Text>
-              <Text style={styles.driverInfo}>Status: {selectedDriver.status || 'Active'}</Text>
+              <Text style={styles.driverInfo}>Status: {selectedDriver.status || 'Unavailable'}</Text>
             </>
           ) : (
             <>

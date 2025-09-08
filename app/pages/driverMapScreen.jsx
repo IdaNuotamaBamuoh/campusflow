@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Button, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { supabase } from '../../backend/supabase';
@@ -15,9 +15,8 @@ const DriverMapScreen = ({ route }) => {
   const [driver, setDriver] = useState(null);
   const [loading, setLoading] = useState(true);
   const [roadRoutes, setRoadRoutes] = useState({});
+  const [isActive, setIsActive] = useState(true); // <-- NEW state for active/unavailable
 
-  
-  //const sheetRef = useRef(null);
   const mapRef = useRef(null);
   const snapTimeoutRef = useRef(null);
 
@@ -29,46 +28,46 @@ const DriverMapScreen = ({ route }) => {
   };
 
   const knustBounds = {
-      north: { latitude: 6.6891, longitude: -1.5640 },
-      south: { latitude: 6.6600, longitude: -1.5650 },
-      east: { latitude: 6.6775, longitude: -1.5400 },
-      west: { latitude: 6.6775, longitude: -1.5900 },
-    };
-  
-    const isInsideKnust = (region) => {
-      const { latitude, longitude } = region;
-      return (
-        latitude >= knustBounds.south.latitude &&
-        latitude <= knustBounds.north.latitude &&
-        longitude >= knustBounds.west.longitude &&
-        longitude <= knustBounds.east.longitude
-      );
-    };
-  
-    const handleRegionChange = useCallback((region) => {
-      if (!isInsideKnust(region)) {
-        if (snapTimeoutRef.current) return;
-  
-        Toast.show({
-          type: 'info',
-          text1: 'Out of bounds',
-          text2: 'Re-centering to KNUST campus in 5 seconds...',
-          visibilityTime: 4000,
-        });
-  
-        snapTimeoutRef.current = setTimeout(() => {
-          mapRef.current?.animateToRegion(initialRegion, 1000);
-          snapTimeoutRef.current = null;
-        }, 5000);
-      } else {
-        if (snapTimeoutRef.current) {
-          clearTimeout(snapTimeoutRef.current);
-          snapTimeoutRef.current = null;
-        }
-      }
-    }, []);
+    north: { latitude: 6.6891, longitude: -1.5640 },
+    south: { latitude: 6.6600, longitude: -1.5650 },
+    east: { latitude: 6.6775, longitude: -1.5400 },
+    west: { latitude: 6.6775, longitude: -1.5900 },
+  };
 
-  // Fetch driver info using eid
+  const isInsideKnust = (region) => {
+    const { latitude, longitude } = region;
+    return (
+      latitude >= knustBounds.south.latitude &&
+      latitude <= knustBounds.north.latitude &&
+      longitude >= knustBounds.west.longitude &&
+      longitude <= knustBounds.east.longitude
+    );
+  };
+
+  const handleRegionChange = useCallback((region) => {
+    if (!isInsideKnust(region)) {
+      if (snapTimeoutRef.current) return;
+
+      Toast.show({
+        type: 'info',
+        text1: 'Out of bounds',
+        text2: 'Re-centering to KNUST campus in 5 seconds...',
+        visibilityTime: 4000,
+      });
+
+      snapTimeoutRef.current = setTimeout(() => {
+        mapRef.current?.animateToRegion(initialRegion, 1000);
+        snapTimeoutRef.current = null;
+      }, 5000);
+    } else {
+      if (snapTimeoutRef.current) {
+        clearTimeout(snapTimeoutRef.current);
+        snapTimeoutRef.current = null;
+      }
+    }
+  }, []);
+
+  // Fetch driver info using id
   useEffect(() => {
     const fetchDriverInfo = async () => {
       try {
@@ -110,14 +109,47 @@ const DriverMapScreen = ({ route }) => {
     })();
   }, []);
 
-  // Update driver location every 5 seconds
+  // Toggle driver status
+  const toggleStatus = async () => {
+    try {
+      const newStatus = !isActive;
+      setIsActive(newStatus);
+
+      if (newStatus) {
+        // ACTIVE: Update with current location
+        await supabase
+          .from('driverprofile')
+          .update({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            status: 'Active',
+          })
+          .eq('id', driverId);
+      } else {
+        // UNAVAILABLE: Set location to NULL
+        await supabase
+          .from('driverprofile')
+          .update({
+            latitude: null,
+            longitude: null,
+            status: 'Unavailable',
+          })
+          .eq('id', driverId);
+      }
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      Alert.alert('Error', 'Failed to toggle status.');
+    }
+  };
+
+  // Update driver location every 5 seconds (only if ACTIVE)
   useEffect(() => {
-    if (!location || !driver) return;
+    if (!location || !driver|| !isActive) return;
 
     const interval = setInterval(async () => {
-      if (driverId) {
+      if (driverId && isActive) {
         const { error } = await supabase
-          .from('driverprofile') 
+          .from('driverprofile')
           .update({
             latitude: location.latitude,
             longitude: location.longitude,
@@ -131,8 +163,9 @@ const DriverMapScreen = ({ route }) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [location, driver]);
+  }, [location, driver, isActive]);
 
+  // Fetch road routes
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) {
       console.warn('Google Maps API key not found');
@@ -194,6 +227,15 @@ const DriverMapScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      {/* Toggle Button */}
+      <View style={{ position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10, border: '2px solid #0d0d0dff', backgroundColor: 'grey', borderRadius: 8,opacity: 0.6 }}>
+        <Button
+          title={isActive ? 'Go Unavailable' : 'Go Active'}
+          onPress={toggleStatus}
+          color={isActive ? 'red' : 'green'}
+        />
+      </View>
+
       <MapView
         style={styles.map}
         initialRegion={initialRegion}
@@ -209,8 +251,7 @@ const DriverMapScreen = ({ route }) => {
         showsUserLocation
         provider={PROVIDER_GOOGLE}
       >
-
-      {busStopsData.map((stop) => (
+        {busStopsData.map((stop) => (
           <Marker
             key={stop.name}
             coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
@@ -218,23 +259,26 @@ const DriverMapScreen = ({ route }) => {
             pinColor="#29722F"
           />
         ))}
+
         {Object.keys(roadRoutes).map((routeKey) => (
-            <Polyline
-              key={routeKey}
-              coordinates={roadRoutes[routeKey]}
-              strokeColor="#007AFF"
-              strokeWidth={5}
-            />
-          )
+          <Polyline
+            key={routeKey}
+            coordinates={roadRoutes[routeKey]}
+            strokeColor="#007AFF"
+            strokeWidth={5}
+          />
+        ))}
+
+        {isActive && (
+          <Marker
+            coordinate={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            title={driver.name}
+            description={`Route: ${driver.route}`}
+          />
         )}
-        <Marker
-          coordinate={{
-            latitude: location.latitude,
-            longitude: location.longitude,
-          }}
-          title={driver.name}
-          description={`Route: ${driver.route}`}
-        />
       </MapView>
     </View>
   );
